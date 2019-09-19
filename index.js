@@ -9,7 +9,8 @@ const client = new Discord.Client();
 // Bind some thinggys to client for global access to said thinggys
 client.config = require('./config.json');
 client.settings = new Enmap({name: "settings"});
-
+client.functions = require('./functions.js')
+client.commands = new Discord.Collection();
 
 // Load Commands into cache
 const cmdFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
