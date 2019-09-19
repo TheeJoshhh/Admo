@@ -1,0 +1,21 @@
+{
+  "name": "status-notifier",
+  "version": "1.0.0",
+  "description": "A bot that notifies users of other users status.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "Status-Notifier"
+  },
+  "author": "Joshua Billing",
+  "license": "ISC",
+  "dependencies": {
+    "better-sqlite3": "^5.4.3",
+    "discord.js": "github:discordjs/discord.js",
+    "enmap": "^5.1.2",
+    "fs": "0.0.1-security"
+  }
+}
