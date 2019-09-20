@@ -8,7 +8,7 @@ module.exports = {
             modCommandPerms: {roles: [], users: []},  // Which roles, users or perms have access to moderator commands. By default kick and prune needs manage messages and ban needs admin.
             embedColour: "#e91e63",  // The embeds will always be this colour, admins can configure it
             autoModerator: false,
-            autoModeratorSettings: [{warnsBeforeKick: 5, warnsBeforeBan: 10}, {antiswear: false, swearwords: [{word: "fuck", punishment: true}], swearPunishment: "warning", allowedToSwear: {roles: [], channels: [], users: []}}]
+            autoModeratorSettings: [{warnsBeforeKick: 5, warnsBeforeBan: 10}, {antiswear: true, swearwords: [{word: "fuck", punishment: true}], swearPunishment: "warning", allowedToSwear: {roles: [], channels: [], users: []}}]
         })
     },
 }

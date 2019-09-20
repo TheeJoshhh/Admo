@@ -14,7 +14,7 @@ module.exports = (client, message) => {
         }
         if(!prefix) return;
         
-        const args = message.content.slice(prefix.length).split(/ +/);
+        const args = message.content.toLowerCase().slice(prefix.length).split(/ +/);
         const command = args.shift().toLowerCase();
     
         const cmd = client.commands.get(command)
