@@ -1,8 +1,6 @@
 module.exports = (client, message) => {
     if (message.author.bot) return;
 
-
-
     if (message.guild) {
 
         if (!client.settings.get(message.guild.id)) {
