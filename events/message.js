@@ -1,5 +1,6 @@
 module.exports = (client, message) => {
     if (message.author.bot) return;
+    let isOwner = false;
 
     if (message.guild) {
 
@@ -7,21 +8,73 @@ module.exports = (client, message) => {
             client.functions.ensureData(client, message.guild.id)
         }
 
+        let argsLower = message.content.toLowerCase().split(/ +/);
+        let args = message.content.split(/ +/);
+
         const prefixes = [client.settings.get(message.guild.id, "prefix")];
         let prefix = false;
         for(const thisPrefix of prefixes) {
           if(message.content.startsWith(thisPrefix)) prefix = thisPrefix;
         }
-        if(!prefix) return;
+        if (prefix) {
+          args = message.content.slice(prefix.length).split(/ +/);
+          argsLower = message.content.toLowerCase().slice(prefix.length).split(/ +/);
+        }
+
         
-        const args = message.content.toLowerCase().slice(prefix.length).split(/ +/);
+
+        if (client.settings.get(message.guild.id, "autoModerator") === true && client.settings.get(message.guild.id, "antiswear") === true) {
+          let swears = [];
+          let punishments = [];
+          
+          console.log(argsLower)
+
+          client.settings.get(message.guild.id, "swearwords").forEach(swear => {
+            if (argsLower.includes(swear.word)) {
+              if (!swears.includes(swear.word)) {
+                swears.push(swear.word)
+                if (swear.punishment === 'default') punish (client, message, client.settings.get(message.guild.id, "defaultSwearPunishment"), client.settings.get(message.guild.id, "defaultPunishmentSettings"))
+                else punish (client, message, swear.punishment, swear.punishmentSettings)
+              }
+            }
+            swear.aliasWords.forEach(alias => {
+              console.log(swear.word + ' + ' + alias)
+              if (argsLower.includes(swear.word) || argsLower.includes(alias)) {
+                if (!swears.includes(swear.word)) {
+                  swears.push(swear.word)
+                  if (swear.punishment === 'default') punish (client, message, client.settings.get(message.guild.id, "defaultSwearPunishment"), client.settings.get(message.guild.id, "defaultPunishmentSettings"))
+                  else punish (client, message, swear.punishment, swear.punishmentSettings)
+                }
+              }
+            });
+          });
+        }
+
+
+        function punish (client, message, punishment, settings) {
+          console.log("You Swore!")
+        }
+
+        if (!prefix) return;
+        
         const command = args.shift().toLowerCase();
+  
     
         const cmd = client.commands.get(command)
           || client.commands.find(cmd => cmd.help.aliases && cmd.help.aliases.includes(command));
     
         if (!cmd) return;
-        else cmd.run(client, message, args)
+
+        if (cmd.help.class === 'owner') {
+          client.config.ownerIDs.forEach(ID => {
+            if (ID === message.author.id) {
+              isOwner = true;
+            }
+          });
+          if (isOwner == false) return;
+        }
+        
+        cmd.run(client, message, args)
     
     } else {
 
@@ -34,6 +87,16 @@ module.exports = (client, message) => {
           || client.commands.find(cmd => cmd.help.aliases && cmd.help.aliases.includes(command));
     
         if (!cmd) return;
+
+        if (cmd.help.class === 'owner') {
+          client.config.ownerIDs.forEach(ID => {
+            if (ID === message.author.id) {
+              isOwner = true;
+            }
+          });
+          if (isOwner == false) return;
+        }
+
 
         if (cmd.help.guildOnly === true) {
             message.channel.send(`Sorry this command can only be used in servers! Here is a list of commands that should work in Direct Messages:`)

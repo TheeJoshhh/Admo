@@ -1,11 +1,6 @@
 const Discord = require("discord.js");
 module.exports.run = async (client, message, args) => {
 
-  const emma = 'Emma is an adorable smol *sneaky* sloth'
-  const Emma = 'Emma is an adorable smol *sneaky* sloth'
-
-  const josh = 'Josh is an amazing boyfriend! :D'
-
     function clean (text) {
         if (typeof(text) === "string")
           return text.replace(/`/g, "`" + String.fromCharCode(8203)).replace(/@/g, "@" + String.fromCharCode(8203));
@@ -30,7 +25,7 @@ module.exports.run = async (client, message, args) => {
   module.exports.help = {
         name: "eval",
         aliases: ['e'],
-        class: "hidden",
+        class: "owner",
         usage: `;eval code`,
         description: "Test some code.",
         status: "Working",

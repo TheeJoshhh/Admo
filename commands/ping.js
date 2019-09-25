@@ -15,5 +15,5 @@ module.exports.run = async (client, message) => {
         usage: `;ping`,
         description: "Why are you even here, it's literally just a ping command.\nIt replies with latency.",
         status: true,
-        guildOnly: true
+        guildOnly: false
  }
