@@ -9,6 +9,7 @@ const client = new Discord.Client();
 // Bind some thinggys to client for global access to said thinggys
 client.config = require('./config.json');
 client.settings = new Enmap({name: "settings"});
+client.guildUserData = new Enmap({name: "guildUserData"})
 client.functions = require('./functions.js')
 client.commands = new Discord.Collection();
 
