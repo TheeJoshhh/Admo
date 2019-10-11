@@ -3,38 +3,40 @@ module.exports.run = async (client, message, args) => {
 
     const { commands } = message.client;
     const embed = new Discord.MessageEmbed()
-    .setColor('82CAFA')
+
     .setFooter(`${client.user.username} | Build Version: ${client.config.version}`, client.user.avatarURL)
 
         if (!args[0]) {
             if (message.guild) {
-            const fun = commands.filter(command => command.help.class === 'fun')
-            const utility = commands.filter(command => command.help.class === 'utility')
-            const disabled = commands.filter(command => command.help.class === 'disabled')
-            const moderation = commands.filter(command => command.help.class === 'moderation')
+                embed.setColor(client.settings.get(message.guild.id, "embedColour"))
+                const fun = commands.filter(command => command.help.class === 'fun')
+                const utility = commands.filter(command => command.help.class === 'utility')
+                const disabled = commands.filter(command => command.help.class === 'disabled')
+                const moderation = commands.filter(command => command.help.class === 'moderation')
 
-            if (utility.size > 0) embed.addField("\> Utility", "`" + utility.map(command => command.help.name).join('`, `') + "`");
-            if (moderation.size > 0) embed.addField("\> Moderation", "`" + moderation.map(command => command.help.name).join('`, `') + "`");
-            if (fun.size > 0) embed.addField("\> Fun", "`" + fun.map(command => command.help.name).join('`, `') + "`");
-            if (disabled.size > 0) embed.addField("\> Disabled", "`" + disabled.map(command => command.help.name).join('`, `') + "`");
+                if (utility.size > 0) embed.addField("\> Utility", "`" + utility.map(command => command.help.name).join('`, `') + "`");
+                if (moderation.size > 0) embed.addField("\> Moderation", "`" + moderation.map(command => command.help.name).join('`, `') + "`");
+                if (fun.size > 0) embed.addField("\> Fun", "`" + fun.map(command => command.help.name).join('`, `') + "`");
+                if (disabled.size > 0) embed.addField("\> Disabled", "`" + disabled.map(command => command.help.name).join('`, `') + "`");
 
-            embed.setTitle("Help Menu")
-            return message.channel.send(embed)
+                embed.setTitle("Help Menu")
+                return message.channel.send(embed)
             
             } else {
-            const fun = commands.filter(command => command.help.class === 'fun' && command.help.guildOnly === false)
-            const utility = commands.filter(command => command.help.class === 'utility' && command.help.guildOnly === false)
-            const disabled = commands.filter(command => command.help.class === 'disabled' && command.help.guildOnly === false)
-            const moderation = commands.filter(command => command.help.class === 'moderation' && command.help.guildOnly === false)
+                embed.setColor('82CAFA')
+                const fun = commands.filter(command => command.help.class === 'fun' && command.help.guildOnly === false)
+                const utility = commands.filter(command => command.help.class === 'utility' && command.help.guildOnly === false)
+                const disabled = commands.filter(command => command.help.class === 'disabled' && command.help.guildOnly === false)
+                const moderation = commands.filter(command => command.help.class === 'moderation' && command.help.guildOnly === false)
 
-            if (utility.size > 0) embed.addField("\> Utility", "`" + utility.map(command => command.help.name).join('`, `') + "`");
-            if (moderation.size > 0) embed.addField("\> Moderation", "`" + moderation.map(command => command.help.name).join('`, `') + "`");
-            if (fun.size > 0) embed.addField("\> Fun", "`" + fun.map(command => command.help.name).join('`, `') + "`");
-            if (disabled.size > 0) embed.addField("\> Disabled", "`" + disabled.map(command => command.help.name).join('`, `') + "`");
+                if (utility.size > 0) embed.addField("\> Utility", "`" + utility.map(command => command.help.name).join('`, `') + "`");
+                if (moderation.size > 0) embed.addField("\> Moderation", "`" + moderation.map(command => command.help.name).join('`, `') + "`");
+                if (fun.size > 0) embed.addField("\> Fun", "`" + fun.map(command => command.help.name).join('`, `') + "`");
+                if (disabled.size > 0) embed.addField("\> Disabled", "`" + disabled.map(command => command.help.name).join('`, `') + "`");
 
-            embed.setTitle("Help Menu")
-            embed.setDescription(`You're currently seeing a shortened help menu as all the following commands are commands that will work in direct messages with the bot, to see all of the commands run \`${client.config.defaultPrefix}help --full\` or run the help command in a server.`)
-            return message.channel.send(embed)
+                embed.setTitle("Help Menu")
+                embed.setDescription(`You're currently seeing a shortened help menu as all the following commands are commands that will work in direct messages with the bot, to see all of the commands run \`${client.config.defaultPrefix}help --full\` or run the help command in a server.`)
+                return message.channel.send(embed)
             }
         }
 
