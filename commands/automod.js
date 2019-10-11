@@ -3,7 +3,6 @@ module.exports.run = async (client, message, args) => {
 
     const prefix = client.settings.get(message.guild.id, "prefix");
     const permissions = client.settings.get(message.guild.id, "modCommandPerms");
-    const autoModEnabled = client.settings.get(message.guild.id, "autoModerator")
     const antiswearEnabled = client.settings.get(message.guild.id, "antiswear")
     const swearWords = client.settings.get(message.guild.id, "swearwords")
     const embed = new Discord.MessageEmbed();
@@ -16,39 +15,8 @@ module.exports.run = async (client, message, args) => {
 
     if (permissions.users.includes(message.author.id) || message.member.roles.find(role => permissions.roles.includes(role.id)) || message.member.hasPermission("ADMINISTRATOR")) {
         if (!args[0]) return message.channel.send(`Not enough input!\nIf you're not sure how to use this command run \`${prefix}help\``)
-            if (args[0] === 'enable' || args[0] === 'on') { // If user is enabling auto-mod
-                if (autoModEnabled === false) {
-                    try {
-                        client.settings.set(message.guild.id, true, "autoModerator");
-                        embed.setTitle("Auto-Mod is now Enabled");
-                        embed.setDescription(`To learn how to configure Auto-Mod run \`${prefix}help auto-mod\``);
-                        return message.channel.send(embed)
-                    } catch (e) {
-                        console.log(e.stack)
-                        return message.channel.send("An error has occured.");
-                    }
-                } else { // If Auto-Mod is already enabled
-                    embed.setTitle("Auto-Mod is Enabled!");
-                    embed.setDescription(`The Auto-Mod is already enabled!\nTo learn how to configure Auto-Mod run \`${prefix}help auto-mod\``)
-                    return message.channel.send(embed);
-                }
-            } else if (args[0] === 'disable' || args[0] === 'off') { // If user is disabling Auto-Mod
-                if (autoModEnabled === true) {
-                    try {
-                        client.settings.set(message.guild.id, false, "autoModerator");
-                        embed.setTitle("Auto-Mod is now Disabled");
-                        embed.setDescription(`To learn how to configure Auto-Mod run \`${prefix}help auto-mod\``);
-                        return message.channel.send(embed)
-                    } catch (e) {
-                        console.log(e.stack)
-                        return message.channel.send("An error has occured.");
-                    }
-                } else { // If Auto-Mod is already enabled
-                    embed.setTitle("Auto-Mod is Disabled!");
-                    embed.setDescription(`The Auto-Mod is already disabled!\nTo learn how to configure Auto-Mod run \`${prefix}help auto-mod\``)
-                    return message.channel.send(embed);
-                }
-        } else if (args[0] === 'anti-swear' || args[0] === 'antiswear') { // ANTI-SWEAR
+            
+        if (args[0] === 'anti-swear' || args[0] === 'antiswear') { // ANTI-SWEAR
             if (args[1] === 'enable' || args[1] === 'on') { // Enable Anti-Swear
                 if (antiswearEnabled !== true) { // Anti-Swear is currently not enabled
                     client.settings.set(message.guild.id, true, "antiswear")
@@ -80,9 +48,9 @@ module.exports.run = async (client, message, args) => {
                     embed.setTitle("Invalid Word!")
                     embed.setDescription("That word is already banned!")
                     return message.channel.send(embed);
-                } else if (args[2].length > 50 || args[2].length < 2) {
+                } else if (args[2].length > 20 || args[2].length < 2) {
                         embed.setTitle("You cannot ban a word of that size!")
-                        embed.setDescription("You cannot ban a word longer than 50 characters or less than 2 sorry.\nIf you're trying to ban a link try the automod link banner!")
+                        embed.setDescription("You cannot ban a word longer than 20 characters or less than 2 sorry.\nIf you're trying to ban a link try the automod link banner!")
                         return message.channel.send(embed);
                 } else {
                     if (!args[3]) {
@@ -99,7 +67,11 @@ module.exports.run = async (client, message, args) => {
 
                             }
                         } else if (args[3].toLowerCase() === 'default') {
-
+                            client.settings.push(message.guild.id, {name: args[2].toLowerCase(), aliases: [], punishment: "default", punishmentSettings: "default"}, "swearwords")
+                            embed.setTitle("The word is now banned!")
+                            embed.addField("Punishment", `Guilds default(${client.settings.get(message.guild.id, "defaultSwearPunishment")})`)
+                            embed.setDescription(`To check the correct word has been banned or just to get a list of banned words run \`${prefix}automod antiswear list\` in an NSFW channel.`)
+                            return message.channel.send(embed)
                         } else if (args[3].toLowerCase() === "mute") {
                             
                         } else if (args[3].toLowerCase() === "kick") {
@@ -140,7 +112,6 @@ module.exports.run = async (client, message, args) => {
 
             } else if (args[1] === 'list' || args[1] === 'status') {
                     embed.setTitle(`Anti-Swear info for guild ${message.guild.name}`)
-                    embed.addField("Auto-Mod Status", autoModEnabled, true)
                     embed.addField("Anti-Swear Status", antiswearEnabled, true)
                     if (swearWords[0]) {
                         embed.addField("Swearwords (May Contain Explicit Content)", "||" + wordArray.join("||, ||") + "||")
