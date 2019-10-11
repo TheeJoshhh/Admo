@@ -8,6 +8,10 @@ module.exports = (client, message) => {
             client.functions.ensureData(client, message.guild.id)
         }
 
+        if (!client.guildUserData.get(`${message.guild.id}-${message.author.id}`)) {
+          client.functions.ensureGuildUserData(client, message.guild.id, message.author.id)
+        }
+
         let argsLower = message.content.toLowerCase().split(/ +/);
         let args = message.content.split(/ +/);
 
@@ -21,13 +25,16 @@ module.exports = (client, message) => {
           argsLower = message.content.toLowerCase().slice(prefix.length).split(/ +/);
         }
 
+        const command = args.shift().toLowerCase();
+  
+        const cmd = client.commands.get(command)
+          || client.commands.find(cmd => cmd.help.aliases && cmd.help.aliases.includes(command));
+    
+        if (!cmd) {
         
-
-        if (client.settings.get(message.guild.id, "autoModerator") === true && client.settings.get(message.guild.id, "antiswear") === true) {
+        if (client.settings.get(message.guild.id, "antiswear") === true) {
           let swears = [];
           let punishments = [];
-          
-          console.log(argsLower)
 
           client.settings.get(message.guild.id, "swearwords").forEach(swear => {
             if (argsLower.includes(swear.word)) {
@@ -38,7 +45,6 @@ module.exports = (client, message) => {
               }
             }
             swear.aliasWords.forEach(alias => {
-              console.log(swear.word + ' + ' + alias)
               if (argsLower.includes(swear.word) || argsLower.includes(alias)) {
                 if (!swears.includes(swear.word)) {
                   swears.push(swear.word)
@@ -55,15 +61,7 @@ module.exports = (client, message) => {
           console.log("You Swore!")
         }
 
-        if (!prefix) return;
-        
-        const command = args.shift().toLowerCase();
-  
-    
-        const cmd = client.commands.get(command)
-          || client.commands.find(cmd => cmd.help.aliases && cmd.help.aliases.includes(command));
-    
-        if (!cmd) return;
+      } else {
 
         if (cmd.help.class === 'owner') {
           client.config.ownerIDs.forEach(ID => {
@@ -75,6 +73,8 @@ module.exports = (client, message) => {
         }
         
         cmd.run(client, message, args)
+
+      }
     
     } else {
 
