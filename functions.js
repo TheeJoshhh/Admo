@@ -14,7 +14,7 @@ module.exports = {
             defaultPunishmentSettings: {}, 
             allowedToSwear: [], // The ID's of chann
             muteRole: "", // Just the ID of the mute role
-            muteRoleAuto: false,
+            muteRoleAuto: false, // Whether or not the mute role auto configures itself
             unmuteDM: false,
             antilink: true, // AllLinks, true or false (All links = ban all links, true = ban specific links, false = off)
             links: [],
