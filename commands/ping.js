@@ -12,7 +12,7 @@ module.exports.run = async (client, message) => {
         name: "ping",
         aliases: ['latency'],
         class: "utility",
-        usage: `;ping`,
+        usage: `*ping`,
         description: "Why are you even here, it's literally just a ping command.\nIt replies with latency.",
         status: true,
         guildOnly: false
