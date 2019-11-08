@@ -1,5 +1,7 @@
 module.exports = (client, member) => {
 
+    client.functions.ensureGuildUserData(client, member.guild.id, member.id)
+
     if (client.settings.get(member.guild.id, "autoRole.enabled") === true) {
         if (member.guild.roles.find(role => role.id === client.settings.get(member.guild.id, "autoRole.role"))) {
             return member.roles.add(member.guild.roles.find(role => role.id === client.settings.get(member.guild.id, "autoRole.role")))

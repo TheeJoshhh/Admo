@@ -3,7 +3,7 @@ module.exports.run = async (client, message, args) => {
 
     const prefix = client.settings.get(message.guild.id, "prefix");
     const permissions = client.settings.get(message.guild.id, "modCommandPerms");
-    const antiswearEnabled = client.settings.get(message.guild.id, "antiswear")
+    const antiswearEnabled = client.settings.get(message.guild.id, "antiswear.enabled")
     const swearWords = client.settings.get(message.guild.id, "swearwords")
     const embed = new Discord.MessageEmbed();
     let wordArray = [];
@@ -19,7 +19,7 @@ module.exports.run = async (client, message, args) => {
         if (args[0] === 'anti-swear' || args[0] === 'antiswear') { // ANTI-SWEAR
             if (args[1] === 'enable' || args[1] === 'on') { // Enable Anti-Swear
                 if (antiswearEnabled !== true) { // Anti-Swear is currently not enabled
-                    client.settings.set(message.guild.id, true, "antiswear")
+                    client.settings.set(message.guild.id, true, "antiswear.enabled")
                     embed.setTitle("Anti-Swear is now Enabled");
                     embed.setDescription(`To learn how to configure Anti-Swear run \`${prefix}help anti-swear\``);
                     return message.channel.send(embed)
@@ -30,7 +30,7 @@ module.exports.run = async (client, message, args) => {
                 }
             } else if (args[1] === 'disable' || args[1] === 'off') { // Disable Anti-Swear
                 if (antiswearEnabled !== false) { // Anti-Swear is currently not enabled
-                    client.settings.set(message.guild.id, false, "antiswear")
+                    client.settings.set(message.guild.id, false, "antiswear.enabled")
                     embed.setTitle("Anti-Swear is now Disabled");
                     embed.setDescription(`To learn how to configure Anti-Swear run \`${prefix}help anti-swear\``);
                     return message.channel.send(embed)
@@ -54,9 +54,9 @@ module.exports.run = async (client, message, args) => {
                         return message.channel.send(embed);
                 } else {
                     if (!args[3]) {
-                        client.settings.push(message.guild.id, {name: args[2].toLowerCase(), aliases: [], punishment: "default", punishmentSettings: "default"}, "swearwords")
+                        client.settings.push(message.guild.id, {word: args[2].toLowerCase(), aliasWords: [], punishment: "default", punishmentSettings: "default"}, "swearwords")
                         embed.setTitle("The word is now banned!")
-                        embed.addField("Punishment", `No punishment supplied so defaulting to guilds default(${client.settings.get(message.guild.id, "defaultSwearPunishment")})`)
+                        embed.addField("Punishment", `No punishment supplied so defaulting to guilds default(${client.settings.get(message.guild.id, "antiswear.defaultPunishment")})`)
                         embed.setDescription(`To check the correct word has been banned or just to get a list of banned words run \`${prefix}automod antiswear list\``)
                         return message.channel.send(embed)
                     } else {
@@ -69,7 +69,7 @@ module.exports.run = async (client, message, args) => {
                         } else if (args[3].toLowerCase() === 'default') {
                             client.settings.push(message.guild.id, {name: args[2].toLowerCase(), aliases: [], punishment: "default", punishmentSettings: "default"}, "swearwords")
                             embed.setTitle("The word is now banned!")
-                            embed.addField("Punishment", `Guilds default(${client.settings.get(message.guild.id, "defaultSwearPunishment")})`)
+                            embed.addField("Punishment", `Guilds default(${client.settings.get(message.guild.id, "antiswear.defaultPunishment")})`)
                             embed.setDescription(`To check the correct word has been banned or just to get a list of banned words run \`${prefix}automod antiswear list\` in an NSFW channel.`)
                             return message.channel.send(embed)
                         } else if (args[3].toLowerCase() === "mute") {

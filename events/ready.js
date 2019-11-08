@@ -2,7 +2,13 @@ module.exports = (client) => {
     console.log(`Admo is online in ${client.guilds.size} guilds.`)
 
     client.guilds.forEach(guild => {
+
+        client.functions.ensureData(client, guild.id)
+
         guild.members.forEach(member => {
+
+            client.functions.ensureGuildUserData(client, guild.id, member.id)
+
             if (!client.guildUserData.get(`${guild.id}-${member.user.id}`)) {
                 client.functions.ensureGuildUserData(client, guild.id, member.user.id)
             }

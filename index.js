@@ -12,6 +12,7 @@ client.settings = new Enmap({name: "settings"});
 client.guildUserData = new Enmap({name: "guildUserData"})
 client.functions = require('./functions.js')
 client.commands = new Discord.Collection();
+global.antiSpamCache = {}
 
 // Load Commands into cache
 const cmdFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));

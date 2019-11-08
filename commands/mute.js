@@ -60,7 +60,7 @@ module.exports.run = (client, message, args) => {
                     embed.setDescription("You formatted the time wrong!\nThe time must be formatted as one word, eg NOT `10m 30s` instead do `10.5m`.\nYou can use m for minutes, h for hours and d for days.")
                     return message.channel.send(embed)
                 }
-                if (ms(time) < ms("1m") || ms(time) > ms("1y")) {
+                if (ms(time) < ms("1m") || ms(time) > ms("3 months")) {
                     embed.setTitle("Invalid amount of time!")
                     embed.setDescription("You cannot mute a user for less than 1 minute or more than a year. This is to prevent discord API spam and to reduce the chance of the bot not unmuting someone because it went offline or restarted during the users mute period.")
                     return message.channel.send(embed)
