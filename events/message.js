@@ -10,9 +10,11 @@ module.exports = async (client, message) => {
         
 
         if (message.mentions.members.first()) {
-          message.mentions.members.forEach(member => {
-            client.functions.ensureGuildUserData(client, message.guild.id, member.user.id)
-          });
+          if (message.mentions.members.first().bot === false) {
+            message.mentions.members.forEach(member => {
+              client.functions.ensureGuildUserData(client, message.guild.id, member.user.id)
+            });
+        }
         }
 
         let argsLower = message.content.toLowerCase().split(/ +/);
@@ -22,36 +24,44 @@ module.exports = async (client, message) => {
         if (client.settings.get(message.guild.id, "antispam.enabled") === true) {
           if (!antiSpamCache[`${message.guild.id}-${message.author.id}`]) antiSpamCache[`${message.guild.id}-${message.author.id}`] = {messages: [], timestamps: [], violations: [], working: false}
           let userCache = antiSpamCache[`${message.guild.id}-${message.author.id}`]
-          userCache.messages.push(message.content.toLowerCase())
-          userCache.timestamps.push(Date.now())
+          await userCache.messages.push(message.content.toLowerCase())
+          await userCache.timestamps.push(Date.now())
   
-          if (userCache.timestamps[9]) {
-            userCache.messages.shift()
-            userCache.timestamps.shift()
+
+        // If there is 10 messages cached for the user who just sent a message, clear the oldest.
+          if (userCache.timestamps[9]) { 
+            await userCache.messages.shift()
+            await userCache.timestamps.shift()
           }
   
-          if (userCache.timestamps[4]) {
-            console.log(Date.now() - userCache.timestamps[0])
-            if (Date.now() - userCache.timestamps[0] < 4000) {
-              if (!userCache.working) {
-                userCache.working = true;
-                // await message.channel.send("Please Stop Spamming, if further spamming occurs punishment may be applied.");
-                console.log(`User ${message.author.tag} is spamming (Speed)`)
-                await userCache.violations.push(Date.now() + client.settings.get(message.guild.id, "antispam.messageWarnsActiveTime"));
-              }
+
+          if (userCache.messages[2]) { // If there's at least 3 messages cached for the user who just sent a message.
+            if (Date.now() - userCache.timestamps[5] < 3000) { // If user sent 3 messages in 3 seconds.
+              message.channel.send("Spammer")
             }
           }
-  
-          if ((userCache.messages.length -2) > -1) {
-            if (userCache.messages[userCache.messages.length - 3] === userCache.messages[userCache.messages.length - 2] && userCache.messages[userCache.messages.length - 2] === userCache.messages[userCache.messages.length - 1]) {
-              if (!userCache.working) {
-                userCache.working = true;
-                // await message.channel.send("Please Stop Spamming, if further spamming occurs punishment may be applied.");
-                console.log(`User ${message.author.tag} is spamming (Duplicates)`)
-                await userCache.violations.push(Date.now() + client.settings.get(message.guild.id, "antispam.messageWarnsActiveTime"));
-              }
-            }
-          }
+
+          // if (userCache.timestamps[4]) {
+          //   console.log(Date.now() - userCache.timestamps[0])
+          //   if (Date.now() - userCache.timestamps[0] < 10000) {
+          //     if (!userCache.working) {
+          //       userCache.working = true;
+          //       await message.channel.send("Please Stop Spamming, if further spamming occurs punishment may be applied.");
+          //       console.log(`User ${message.author.tag} is spamming (Speed)`)
+          //       await userCache.violations.push(Date.now() + client.settings.get(message.guild.id, "antispam.messageWarnsActiveTime"));
+          //     }
+          //   }
+          // }
+          // if ((userCache.messages.length -2) > -1) {
+          //   if (userCache.messages[userCache.messages.length - 3] === userCache.messages[userCache.messages.length - 2] && userCache.messages[userCache.messages.length - 2] === userCache.messages[userCache.messages.length - 1]) {
+          //     if (!userCache.working) {
+          //       userCache.working = true;
+          //       await message.channel.send("Please Stop Spamming, if further spamming occurs punishment may be applied.");
+          //       console.log(`User ${message.author.tag} is spamming (Duplicates)`)
+          //       await userCache.violations.push(Date.now() + client.settings.get(message.guild.id, "antispam.messageWarnsActiveTime"));
+          //     }
+          //   }
+          // }
 
           let violationCount = 0;
           let arrNum = 0
@@ -64,12 +74,13 @@ module.exports = async (client, message) => {
 
           if (violationCount >= client.settings.get(message.guild.id, "antispam.messageWarnsTillPunish")) {
             client.functions.punish(client, message, "Admo Auto Moderator", client.settings.get(message.guild.id, "antispam.spamPunishment"), client.settings.get(message.guild.id, "antispam.spamPunishmentSettings"))
+            userCache.violations = [];
           }
 
           if (userCache.working) {
             setTimeout(function(){
               userCache.working = false
-            }, 3000)
+            }, 5000)
           }
 
         }
@@ -84,7 +95,7 @@ module.exports = async (client, message) => {
         if (prefix) {
           args = message.content.slice(prefix.length).split(/ +/);
           argsLower = message.content.toLowerCase().slice(prefix.length).split(/ +/);
-        } else return;
+        }
 
         const command = args.shift().toLowerCase();
   
@@ -92,6 +103,7 @@ module.exports = async (client, message) => {
           || client.commands.find(cmd => cmd.help.aliases && cmd.help.aliases.includes(command));
     
         if (!cmd) {
+
         
         if (client.settings.get(message.guild.id, "antiswear.enabled") === true) {
           let swears = [];
@@ -115,9 +127,11 @@ module.exports = async (client, message) => {
           if (swears) {
             if (swears.length > 0) {
               message.delete();
-              if (swears.length === 1) {
-                if (swears[0].punishment === 'default') client.functions.punish(client, message, client.settings.get(message.guild.id, "antiswear.defaultPunishment"), client.settings.get(message.guild.id, "defaultPunishmentSettings"))
-                else client.functions.punish(client, message, "Admo Auto Moderator", swears[0].punishment, swears[0].punishmentSettings)
+              if (swears.length === 1) { // If the message only has one swearwordd
+                if (swears[0].punishment === 'default') { 
+                  client.functions.punish(client, message, 'Admo Auto Moderator', client.settings.get(message.guild.id, "antiswear.defaultPunishment"), client.settings.get(message.guild.id, "defaultPunishmentSettings"))
+
+                } else client.functions.punish(client, message, "Admo Auto Moderator", swears[0].punishment, swears[0].punishmentSettings)
               } else {
                 let maxPun = {name: '', num: 1}
                 let arrayNum = -1

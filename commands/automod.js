@@ -140,7 +140,7 @@ module.exports.run = async (client, message, args) => {
   module.exports.help = {
         name: "automod",
         aliases: ['auto-mod', 'automoderator', 'auto-moderator', 'auto-moderation', 'automoderation'],
-        class: "utility",
+        class: "moderation",
         usage: `To-Do`,
         description: "Configure all Auto-Mod settings.",
         guildOnly: true,

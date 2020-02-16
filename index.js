@@ -37,6 +37,7 @@ evtFiles.forEach(file => {
     delete require.cache[require.resolve(`./events/${file}`)];
 })
 
+process.on('unhandledRejection', console.log)
 
 // Login to the bot user
 client.login(client.config.token);

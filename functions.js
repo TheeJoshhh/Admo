@@ -1,33 +1,33 @@
 module.exports = {
     "ensureData": (client, guildID) => {
-        const ms = require("ms")
-        client.settings.ensure(guildID, {
+        const ms = require("ms") // Require the module I use to convert time measurements into milliseconds 
+        client.settings.ensure(guildID, { // Ensure "GuildID" has existing data or apply the following default data.
             prefix: client.config.defaultPrefix, // This will allow servers to change their servers prefix.
             disabledChannels: [], // The bot will ignore all channels with their ID in this array.
             modCommandPerms: {roles: [], users: []},  // Which roles, users or perms have access to moderator commands. By default kick and prune needs manage messages and ban needs admin.
             embedColour: "#e91e63",  // The embeds will always be this colour, admins can configure it
-            warnsBeforeKick: 5,
-            warnsBeforeBan: 10,
+            warnsBeforeKick: 5, // Active warnings a user can obtain before being kicked
+            warnsBeforeBan: 10, // Active warnings a user can obtain before being banned
             warnActiveTime: 604800000, // How long warnings are active for (1 week by default)
             antiswear: {enabled: false, defaultPunishment: "warning", defaultPunishmentSettings: {amount: 1}}, // AntiSwear Status
             swearwords: [{word: "fuck", aliasWords: ["fuk", "fucc"], punishment: "default", punishmentSettings: {}}, {word: "retard", aliasWords: [], punishment: "default", punishmentSettings: {}}],
-            antispam: {enabled: true, messageWarnsTillPunish:3, messageWarnsActiveTime: ms("6h"), spamPunishment: "mute", spamPunishmentSettings: {time: ms("10m"), reason: "Continuing to Spam Despite Warnings"}},
+            antispam: {enabled: false, messageWarnsTillPunish:3, messageWarnsActiveTime: ms("6h"), spamPunishment: "mute", spamPunishmentSettings: {time: ms("10m"), reason: "Continuing to Spam Despite Warnings"}},
             lastAutoSetupMute: null, 
-            allowedToSwear: [], // The ID's of channels people or roles that can swear
+            autoModIgnore: [], // The ID's of channels people or roles that AutoMod ignores
             muteRole: "", // Just the ID of the mute role
             muteRoleAuto: false, // Whether or not the mute role auto configures itself
             antilink: false, // AllLinks, true or false (AllLinks = ban all links, true = ban specific links, false = off)
-            links: [],
-            logs: {enabled: false, channel: ""},
-            autoRole: {enabled: false, role: ""}
+            links: [], // Links that are part of anti-link
+            logs: {enabled: false, channel: ""}, // Whether or not logs are enabled and the channel of which mute is in
+            autoRole: {enabled: false, role: ""} // Whether or not users are given a role when they join and if so which role.
         })
     },
 
 
-    "ensureGuildUserData": (client, guildID, userID) => {
-        client.guildUserData.ensure(`${guildID}-${userID}`, {
-            muted: {enabled: false, endTime: false},
-            warnings: []
+    "ensureGuildUserData": (client, guildID, userID) => { 
+        client.guildUserData.ensure(`${guildID}-${userID}`, { // Ensure "userID" has existing data or apply the following default data.
+            muted: {enabled: false, endTime: false}, // Whether or not the user is currently muted and the timestamp of when said mute ends.
+            warnings: [] // Array of users warnings. {active: true, reason: reason, moderator: moderator, dateGiven: Date.now()}
         })
     },
 
@@ -61,18 +61,18 @@ module.exports = {
                                 })
                                 .then((response) => {
                                     const role = message.guild.roles.find(role => role.name === response.first().content)
-                                    if (!role) {
+                                    if (!role) { // If a role with the name the user supplied cannot be found.
                                         embed.setTitle("Error: Role not found")
                                         embed.setDescription(`The role ${response.first().content} could not be found\nPlease keep in mind this is case sensitive.`)
                                         message.channel.send(embed)
-                                        return client.functions.setup_autorole(client, message, multiple)
-                                    } else {
+                                        return client.functions.setup_autorole(client, message, multiple) // Loops back to AutoRole setup
+                                    } else { // If the role the user supplied can be found.
                                         client.settings.set(message.guild.id, true, "autoRole.enabled")
                                         client.settings.set(message.guild.id, role.id, "autoRole.role")
                                         embed.setTitle("AutoRole now enabled!")
                                         embed.setDescription("Users joining your server will now automatically get this role.\nIf the role is deleted, autorole will be disabled automatically however changing the roles name will not effect autorole and new users will still recieve the role.")
                                         message.channel.send(embed)
-                                        if (multiple) return client.functions.setup_mute_role(client, message, true);
+                                        if (multiple) return client.functions.setup_mute_role(client, message, true); // If multiple is set to true (meaning it's running through the full setup) continue to the next section of setup
                                         else return;
                                     }
                                 })
@@ -258,11 +258,12 @@ module.exports = {
     },
 
     "setup_prefix": (client, message, multiple) => {
+        const prefix = client.settings.get(message.guild.id, "prefix");
         const Discord = require("discord.js");
         const embed = new Discord.MessageEmbed()
             .setTitle("Set a new prefix!")
             .setColor(client.settings.get(message.guild.id, "embedColour"))
-            .setDescription("What would you like your new prefix to be? (Prefixes aren't case sensitive)\nA prefix is the character / short phrase you put before a command.\nMy default prefix is \*")
+            .setDescription(`What would you like your new prefix to be? (Prefixes aren't case sensitive)\nA prefix is a character or short phrase you put before a command.\nMy default prefix is \*\n\nRun \`--skip\` to leave the prefix as it is (\`${prefix}\`)`)
         message.channel.send(embed)
         .then(() => {
             message.channel.awaitMessages(response => response.author.id === message.author.id, {
@@ -271,17 +272,27 @@ module.exports = {
               errors: ['time'],
             })
             .then((response) => {
+                if (response.first().content.toLowerCase() === '--skip') {
+                    if (multiple) return client.functions.setup_modLogs(client, message, true);
+                    else { 
+                        embed.setTitle("Prefix Change Cancelled")
+                        embed.setDescription("Your prefix has not been changed.")
+                        return message.channel.send(embed)
+                    }
+                }
                 if (response.first().content.length > 0 && response.first().content.length < 5) {
                     client.settings.set(message.guild.id, response.first().content, "prefix")
                     embed.setTitle("Prefix Set")
                     embed.setDescription(`From now on you must lead commands by the new prefix\nFor example; \`${response.first().content}ping\``)
-                    message.channel.send(embed)
-                    if (multiple) return client.functions.setup_modLogs(client, message, true);
-                    else return;
+                    if (!multiple) return message.channel.send(embed)
+                    else return client.functions.setup_modLogs(client, message, true);
                 } else {
                     embed.setTitle("Error: Invalid Prefix Length")
                     embed.setDescription("Your prefix must be less than 5 characters long.")
-                    return message.channel.send(embed)
+                    message.channel.send(embed)
+                    setTimeout(function(){
+                        client.functions.setup_prefix(client, message, multiple)
+                    }, 3000)
                 }
             })
         })
@@ -292,7 +303,7 @@ module.exports = {
         const embed = new Discord.MessageEmbed()
             .setTitle("Set up a mod logs channel!")
             .setColor(client.settings.get(message.guild.id, "embedColour"))
-            .setDescription("Respond with the name of the channel you want your modlogs to be in or \`--skip\` to skip setting up modlogs.\nModlogs are mutes, kicks, bans and anything the automoderator does eg anti-swear and it's resulting punishments.")
+            .setDescription("Respond with the name of the channel you want your modlogs to be in or \`--skip\` to skip setting up modlogs and leave the settings as they are. Modlogs are essential to your experience with Admo.\n\nModlogs are mutes, kicks, bans and anything related to what the automoderator does eg anti-swear and it's resulting punishments. Modlogs also log any errors that are important for you to know such as a user that was supposed to be umuted can't be unmuted.")
         message.channel.send(embed)
         .then(() => {
             message.channel.awaitMessages(response => response.author.id === message.author.id, {
@@ -302,7 +313,12 @@ module.exports = {
             })
             .then((response) => {
                 if (response.first().content.toLowerCase() === '--skip') {
-
+                    if (multiple) return client.functions.setup_modLogs(client, message, true);
+                    else { 
+                        embed.setTitle("Modlogs Setup Cancelled")
+                        embed.setDescription("Your Modlogs settings will remain unchanged.")
+                        return message.channel.send(embed)
+                    }
                 } else {
                     const channel = message.guild.channels.find(channel => channel.name === response.first().content.toLowerCase());
                     if (!channel) {
@@ -312,8 +328,11 @@ module.exports = {
                     }
                     if (channel.type !== "text") {
                         embed.setTitle("Error: Must be a text channel")
-                        embed.setDescription("The channel must be a text channel and not a voice channel or category. (To do just this part of setup run the command `*setup modlogs`)") 
-                        return message.channel.send(embed)
+                        embed.setDescription("The channel must be a text channel and not a voice channel or category.") 
+                        message.channel.send(embed)
+                        setTimeout(function() {
+                            return client.functions.setup_modLogs(client, message, multiple)
+                        }, 3000)
                     }
                     
                     client.settings.set(message.guild.id, true, "logs.enabled")
@@ -323,7 +342,7 @@ module.exports = {
                     message.channel.send(embed)
                     if (multiple) return client.functions.setup_autorole(client, message, true);
                         else return;
-                }
+                } 
             })
         })
     },
@@ -331,55 +350,79 @@ module.exports = {
     "punish": (client, message, moderator, punishment, settings) => {
 
         if (punishment === 'warning') {
+            console.log("!")
             client.functions.warn(client, message, message.member, moderator, "Swearing.")
         } else if (punishment === 'mute') {
-            console.log("!")
             client.functions.mute(client, message.guild, message.member, moderator, settings)
+            console.log("!!!")
         } else if (punishment === 'ban') {
-
+            console.log("!!!!")
         } else if (punishment === 'kick') {
-
+            console.log("!!!!~")
         } else if (punishment === 'none') {
-            
+            console.log("!!!!~!")
         } else {
 
         }
       },
 
-      "mute": (client, guild, member, moderator, settings) => {
+      "mute": async (client, guild, member, moderator, settings) => {
         if (guild.roles.find(role => role.id === client.settings.get(guild.id, "muteRole"))) {
-
-            
             const Discord = require('discord.js')
             const role = guild.roles.find(role => role.id === client.settings.get(guild.id, "muteRole"))
+            if (!role) {
+                if (moderator === 'Admo Auto Moderator') client.functions.log(client, guild, "Error: Missing Mute Role", `Admo Auto Moderator tried to mute ${member.user.tag} for ${settings.reason} but couldn't due to a missing or incorrectly configured mute role. Run the \`*setup mute\` command to fix this.`)
+            }
             const embed = new Discord.MessageEmbed()
+            .setColor(client.settings.get(guild.id, "embedColour"))
             const ms = require('ms')
 
             if (member.roles.has(role.id)) return;
 
             member.roles.add(role.id)
-            .catch(e => {})
+            .catch(e => {
+                return client.functions.log(client, guild, `User \`${member.user.tag}\` was muted for \`${ms(settings.time, {long: true})}\` but I failed to give the user the mute role so the user has not been muted.`, `Moderator: \`${moderator}\`\nReason: \`${settings.reason}\``)
+            })
 
-            if (moderator !== 'Admo Auto Moderator') {
-                moderator = moderator.user.tag
-            }
-
-            embed.setDescription(`Reason: \`${settings.reason}\``)
-            embed.setTitle(`You have been muted for \`${ms(ms(settings.time), {long: true})}\` by \`${moderator}\` in the server \`${guild.name}\``)
-
-            member.send(embed)
-            .catch(e => {})
-
-            client.functions.log(client, guild, `User \`${member.user.tag}\` was muted by \`${moderator}\``, `Reason: \`${settings.reason}\``)
+            if (moderator !== 'Admo Auto Moderator') moderator = moderator.user.tag
+            
+            client.functions.log(client, guild, `User \`${member.user.tag}\` was muted for \`${ms(settings.time, {long: true})}\`.`, `Moderator: \`${moderator}\` \nReason: \`${settings.reason}\``)
             client.guildUserData.set(`${guild.id}-${member.user.id}`, true, "muted.enabled")
-            client.guildUserData.set(`${guild.id}-${member.user.id}`, Date.now() + ms(settings.time), "muted.endTime")
+            client.guildUserData.set(`${guild.id}-${member.user.id}`, Date.now() + settings.time, "muted.endTime")
+
+
+            embed.setTitle(`You were muted for \`${ms(settings.time, {long: true})}\` in the server \`${guild.name}\``)
+            embed.setDescription(`Moderator: \`${moderator}\`\nReason: \`${settings.reason}\``)
+            await member.send(embed)
+            .catch(e => {}) // Ignore error cause it likely just means the user has disabled DM's
+                
+            
+            if (settings.channel) {
+                if (settings.reason.length > 120) {
+                    embed.setTitle("Error: Reason must be less than 120 characters")
+                    embed.setDescription(`If you believe this is a mistake or bug, please report it to the support server. Get a link via the support command.`)
+                    guild.channels.find(channel => channel.id === settings.channel).send(embed)
+                } else {
+                    embed.setTitle(`\`${member.user.tag}\` has been muted for \`${ms(settings.time, {long: true})}\``)
+                    embed.setDescription(`Moderator: \`${moderator}\`\nReason: \`${settings.reason}\``)
+                        try {
+                            await guild.channels.find(channel => channel.id === settings.channel).send(embed)
+                        } catch (e) {} // Ignore error since it isn't a big deal and there's not much you can do about it
+                }
+
+            }
+            
+
+
 
             setTimeout(function(){
                 try {
                     if (role.editable) {
                         member.roles.remove(role.id)
-                        client.functions.log(client, guild, `User ${member.user.tag}'s mute period is over`, `The user has automatically been unmuted.`)
-                        member.send(`You are no longer muted in the server \`${guild.name}\`.`)
+                        client.functions.log(client, guild, `User \`${member.user.tag}\` has been unmuted`, `The user has automatically been unmuted because their mute period is over.`)
+                        embed.setTitle(`Your mute period in the server \`${guild.name}\` is over.`)
+                        embed.setDescription("The mute role has been removed. Please follow the Discord TOS and respect other users.")
+                        member.send(embed)
                         client.guildUserData.set(`${guild.id}-${member.user.id}`, false, "muted.enabled")
                         client.guildUserData.set(`${guild.id}-${member.user.id}`, false, "muted.endTime")
                     } else {
@@ -395,24 +438,31 @@ module.exports = {
         }
       },
 
-      "warn": (client, message, member, warner, reason) => {
+      "warn": (client, message, member, moderator, reason) => {
         const Discord = require('discord.js');
         const embed = new Discord.MessageEmbed();
-        embed.setTitle(`Member ${member.user.tag} has been warned.`)
         embed.setColor(client.settings.get(message.guild.id, "embedColour"))
-        if (warner === "Admo Auto Moderator") embed.addField("Warning Moderator:", "Admo Auto Moderator")
-        else embed.addField("Warning Moderator:", `${warner.tag} (${warner.id})`)
-        embed.addField("Reason:", reason)
-        client.guildUserData.push(`${message.guild.id}-${member.user.id}`, {active: true, reason: reason, moderator: warner, dateGiven: Date.now()}, "warnings")
+        if (moderator !== 'Admo Auto Moderator') moderator = moderator.user.tag
+
+        embed.setTitle(`User \`${member.user.tag}\` has been warned.`)
+        if (moderator === "Admo Auto Moderator") embed.setDescription(`Warning Moderator: \`Admo Auto Moderator\`\nReason: \`${reason}\``)
+        else {
+            embed.setDescription(`Warning Moderator: \`${moderator}\`\nReason: \`${reason}\``)
+            if (embed.reason.length > 120) {
+                embed.setTitle("Error: Reason must be less than 120 characters")
+                embed.setDescription(`If you believe this is a mistake or bug, please report it to the support server. Get a link via the support command.`)
+                return message.channel.send(embed)
+            }
+        }
+
+        client.guildUserData.push(`${message.guild.id}-${member.user.id}`, {active: true, reason: reason, moderator: moderator, dateGiven: Date.now()}, "warnings")
         message.channel.send(embed);
-        embed.setTitle(`You were warned in the server \`${message.guild.name} (${message.guild.id})\``)
+        embed.setTitle(`You were warned in the server \`${message.guild.name}\``)
         try {
             member.send(embed)
         } catch (e) {}
-        let warner1 = '';
-        if (warner !== "Admo Auto Moderator") warner1 = `${warner.tag} (${warner.id})`;
-        else warner1 = warner;
-        client.functions.log(client, message.guild, `Member \`${member.user.tag} (${member.id})\``, `Moderator: \`${warner1}\`\nReason: \`${reason}\``)
+
+        client.functions.log(client, message.guild, `User \`${member.user.tag}\` has been warned`, `Moderator: \`${moderator}\`\nReason: \`${reason}\``)
         client.functions.checkWarnThreshold(client, message.guild, member, true)
       },
 
